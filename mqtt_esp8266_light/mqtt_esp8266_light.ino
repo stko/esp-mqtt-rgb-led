@@ -21,16 +21,19 @@
 // http://pubsubclient.knolleary.net/
 #include <PubSubClient.h>
 
-const bool rgb = (CONFIG_STRIP == RGB) || (CONFIG_STRIP == RGBW);
-const bool includeWhite = (CONFIG_STRIP == BRIGHTNESS) || (CONFIG_STRIP == RGBW);
+const bool rgb = (CONFIG_STRIP == RGB) || (CONFIG_STRIP == RGBW ) || (CONFIG_STRIP == RGBWW);
+const bool includeWhite = (CONFIG_STRIP == BRIGHTNESS) || (CONFIG_STRIP == RGBW) || (CONFIG_STRIP == RGBWW);
+const bool includeColdWhite = (CONFIG_STRIP == BRIGHTNESS)  || (CONFIG_STRIP == RGBWW);
 
 const int BUFFER_SIZE = JSON_OBJECT_SIZE(20);
 
+#include "sunrise.h"
 // Maintained state for reporting to HA
 byte red = 255;
 byte green = 255;
 byte blue = 255;
 byte white = 255;
+byte coldWhite = 255;
 byte brightness = 255;
 
 // Real values to write to the LEDs (ex. including brightness and state)
@@ -38,6 +41,7 @@ byte realRed = 0;
 byte realGreen = 0;
 byte realBlue = 0;
 byte realWhite = 0;
+byte realColdWhite = 0;
 
 bool stateOn = false;
 
@@ -47,8 +51,8 @@ unsigned long lastLoop = 0;
 int transitionTime = 0;
 bool inFade = false;
 int loopCount = 0;
-int stepR, stepG, stepB, stepW;
-int redVal, grnVal, bluVal, whtVal;
+int stepR, stepG, stepB, stepW, stepCW;
+int redVal, grnVal, bluVal, whtVal, cwhtVal;
 
 // Globals for flash
 bool flash = false;
@@ -59,6 +63,7 @@ byte flashRed = red;
 byte flashGreen = green;
 byte flashBlue = blue;
 byte flashWhite = white;
+byte flashColdWhite = coldWhite;
 byte flashBrightness = brightness;
 
 // Globals for colorfade
@@ -86,7 +91,10 @@ void setup() {
     pinMode(CONFIG_PIN_BLUE, OUTPUT);
   }
   if (includeWhite) {
-    pinMode(CONFIG_PIN_WHITE, OUTPUT);
+    pinMode(CONFIG_PIN_WARM_WHITE, OUTPUT);
+  }
+  if (includeColdWhite) {
+    pinMode(CONFIG_PIN_COLD_WHITE, OUTPUT);
   }
 
   // Set the BUILTIN_LED based on the CONFIG_BUILTIN_LED_MODE
@@ -153,6 +161,7 @@ void setup_wifi() {
         "b": 100
       },
       "white_value": 255,
+      "cold_white_value": 255, //optional to be compatible 
       "flash": 2,
       "transition": 5,
       "state": "ON",
@@ -181,12 +190,14 @@ void callback(char* topic, byte* payload, unsigned int length) {
     realGreen = map(green, 0, 255, 0, brightness);
     realBlue = map(blue, 0, 255, 0, brightness);
     realWhite = map(white, 0, 255, 0, brightness);
+    realColdWhite = map(coldWhite, 0, 255, 0, brightness);
   }
   else {
     realRed = 0;
     realGreen = 0;
     realBlue = 0;
     realWhite = 0;
+    realColdWhite = 0;
   }
 
   startFade = true;
@@ -250,10 +261,18 @@ bool processJson(char* message) {
       flashWhite = white;
     }
 
+    if (includeColdWhite && root.containsKey("cold_white_value")) {
+      flashColdWhite = root["cold_white_value"];
+    }
+    else {
+      flashColdWhite = white;
+    }
+
     flashRed = map(flashRed, 0, 255, 0, flashBrightness);
     flashGreen = map(flashGreen, 0, 255, 0, flashBrightness);
     flashBlue = map(flashBlue, 0, 255, 0, flashBrightness);
     flashWhite = map(flashWhite, 0, 255, 0, flashBrightness);
+   flashColdWhite = map(flashColdWhite, 0, 255, 0, flashBrightness);
 
     flash = true;
     startFlash = true;
@@ -289,6 +308,10 @@ bool processJson(char* message) {
       white = root["white_value"];
     }
 
+    if (includeColdWhite && root.containsKey("cold_white_value")) {
+      coldWhite = root["cold_white_value"];
+    }
+
     if (root.containsKey("brightness")) {
       brightness = root["brightness"];
     }
@@ -321,6 +344,10 @@ void sendState() {
 
   if (includeWhite) {
     root["white_value"] = white;
+  }
+
+  if (includeColdWhite) {
+    root["cold_white_value"] = coldWhite;
   }
 
   if (rgb && colorfade) {
@@ -359,12 +386,13 @@ void reconnect() {
   }
 }
 
-void setColor(int inR, int inG, int inB, int inW) {
+void setColor(int inR, int inG, int inB, int inW, int inCW) {
   if (CONFIG_INVERT_LED_LOGIC) {
     inR = (255 - inR);
     inG = (255 - inG);
     inB = (255 - inB);
     inW = (255 - inW);
+    inCW = (255 - inCW);
   }
 
   if (rgb) {
@@ -374,7 +402,11 @@ void setColor(int inR, int inG, int inB, int inW) {
   }
 
   if (includeWhite) {
-    analogWrite(CONFIG_PIN_WHITE, inW);
+    analogWrite(CONFIG_PIN_WARM_WHITE, inW);
+  }
+
+  if (includeColdWhite) {
+    analogWrite(CONFIG_PIN_COLD_WHITE, inCW);
   }
 
   if (CONFIG_DEBUG) {
@@ -396,6 +428,14 @@ void setColor(int inR, int inG, int inB, int inW) {
       Serial.print(inW);
     }
 
+    if (includeColdWhite) {
+      if (rgb) {
+        Serial.print(", ");
+      }
+      Serial.print("cw: ");
+      Serial.print(inCW);
+    }
+
     Serial.println("}");
   }
 }
@@ -415,18 +455,18 @@ void loop() {
 
     if ((millis() - flashStartTime) <= flashLength) {
       if ((millis() - flashStartTime) % 1000 <= 500) {
-        setColor(flashRed, flashGreen, flashBlue, flashWhite);
+        setColor(flashRed, flashGreen, flashBlue, flashWhite, flashColdWhite);
       }
       else {
-        setColor(0, 0, 0, 0);
+        setColor(0, 0, 0, 0, 0);
         // If you'd prefer the flashing to happen "on top of"
         // the current color, uncomment the next line.
-        // setColor(realRed, realGreen, realBlue, realWhite);
+        // setColor(realRed, realGreen, realBlue, realWhite, realColdWhite);
       }
     }
     else {
       flash = false;
-      setColor(realRed, realGreen, realBlue, realWhite);
+      setColor(realRed, realGreen, realBlue, realWhite, realColdWhite);
     }
   }
   else if (rgb && colorfade && !inFade) {
@@ -434,6 +474,7 @@ void loop() {
     realGreen = map(colors[currentColor][1], 0, 255, 0, brightness);
     realBlue = map(colors[currentColor][2], 0, 255, 0, brightness);
     realWhite = map(colors[currentColor][3], 0, 255, 0, brightness);
+    realColdWhite = map(colors[currentColor][3], 0, 255, 0, brightness);
     currentColor = (currentColor + 1) % numColors;
     startFade = true;
   }
@@ -441,12 +482,13 @@ void loop() {
   if (startFade) {
     // If we don't want to fade, skip it.
     if (transitionTime == 0) {
-      setColor(realRed, realGreen, realBlue, realWhite);
+      setColor(realRed, realGreen, realBlue, realWhite, realColdWhite);
 
       redVal = realRed;
       grnVal = realGreen;
       bluVal = realBlue;
       whtVal = realWhite;
+      cwhtVal = realColdWhite;
 
       startFade = false;
     }
@@ -456,6 +498,7 @@ void loop() {
       stepG = calculateStep(grnVal, realGreen);
       stepB = calculateStep(bluVal, realBlue);
       stepW = calculateStep(whtVal, realWhite);
+      stepCW = calculateStep(cwhtVal, realColdWhite);
 
       inFade = true;
     }
@@ -472,8 +515,9 @@ void loop() {
         grnVal = calculateVal(stepG, grnVal, loopCount);
         bluVal = calculateVal(stepB, bluVal, loopCount);
         whtVal = calculateVal(stepW, whtVal, loopCount);
+        cwhtVal = calculateVal(stepCW, cwhtVal, loopCount);
 
-        setColor(redVal, grnVal, bluVal, whtVal); // Write current values to LED pins
+        setColor(redVal, grnVal, bluVal, whtVal, cwhtVal); // Write current values to LED pins
 
         Serial.print("Loop count: ");
         Serial.println(loopCount);
