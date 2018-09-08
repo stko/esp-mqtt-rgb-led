@@ -9,35 +9,37 @@
 enum strip {
   BRIGHTNESS, // only one color/only white
   RGB,        // RGB LEDs
-  RGBW        // RGB LEDs with an extra white LED per LED
+  RGBW,        // RGB LEDs with an extra white LED per LED
+  RGBWW        // RGB LEDs with second extra white LED per LED
 };
 
-#define CONFIG_STRIP RGB // Choose one of the options from above.
+#define CONFIG_STRIP RGBWW // Choose one of the options from above.
 
 // Pins
-// In case of BRIGHTNESS: only WHITE is used
+// In case of BRIGHTNESS: only WARM_WHITE is used
 // In case of RGB(W): red, green, blue(, white) is used
 // All values need to be present, if they are not needed, set to -1,
 // it will be ignored.
-#define CONFIG_PIN_RED   0  // For RGB(W)
-#define CONFIG_PIN_GREEN 2  // For RGB(W)
-#define CONFIG_PIN_BLUE  3  // For RGB(W)
-#define CONFIG_PIN_WHITE -1 // For BRIGHTNESS and RGBW
+#define CONFIG_PIN_RED   2  // For RGB(W)
+#define CONFIG_PIN_GREEN 1  // For RGB(W)
+#define CONFIG_PIN_BLUE  5  // For RGB(W)
+#define CONFIG_PIN_WARM_WHITE 4 // For BRIGHTNESS and Warm White
+#define CONFIG_PIN_COLD_WHITE 3 // For BRIGHTNESS and Cold White
 
 // WiFi
-#define CONFIG_WIFI_SSID "{WIFI-SSID}"
-#define CONFIG_WIFI_PASS "{WIFI-PASSWORD}"
+#define CONFIG_WIFI_SSID "xxxxxxxxxxx"
+#define CONFIG_WIFI_PASS "xxxxxxx"
 
 // MQTT
-#define CONFIG_MQTT_HOST "{MQTT-SERVER}"
+#define CONFIG_MQTT_HOST "openhabianpi"
 #define CONFIG_MQTT_PORT 1883 // Usually 1883
-#define CONFIG_MQTT_USER "{MQTT-USERNAME}"
-#define CONFIG_MQTT_PASS "{MQTT-PASSWORD}"
-#define CONFIG_MQTT_CLIENT_ID "ESP_LED" // Must be unique on the MQTT network
+#define CONFIG_MQTT_USER "sunrise1"
+#define CONFIG_MQTT_PASS "sunrise1"
+#define CONFIG_MQTT_CLIENT_ID "SUNRISE_1" // Must be unique on the MQTT network
 
 // MQTT Topics
-#define CONFIG_MQTT_TOPIC_STATE "home/ESP_LED"
-#define CONFIG_MQTT_TOPIC_SET "home/ESP_LED/set"
+#define CONFIG_MQTT_TOPIC_STATE "home/SUNRISE_1"
+#define CONFIG_MQTT_TOPIC_SET "home/SUNRISE_1/set"
 
 #define CONFIG_MQTT_PAYLOAD_ON "ON"
 #define CONFIG_MQTT_PAYLOAD_OFF "OFF"
@@ -61,4 +63,4 @@ enum strip {
 #define CONFIG_BUILTIN_LED_MODE -1
 
 // Enables Serial and print statements
-#define CONFIG_DEBUG false
+#define CONFIG_DEBUG true

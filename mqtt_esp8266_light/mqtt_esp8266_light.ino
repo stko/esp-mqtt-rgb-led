@@ -179,7 +179,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
   message[length] = '\0';
   Serial.println(message);
-
+  Serial.flush();
   if (!processJson(message)) {
     return;
   }
