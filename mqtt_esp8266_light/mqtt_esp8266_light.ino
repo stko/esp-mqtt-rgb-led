@@ -183,7 +183,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
   if (!processJson(message)) {
     return;
   }
-
+  Serial.println("JSON ok");
+  Serial.flush();
+ 
   if (stateOn) {
     // Update lights
     realRed = map(red, 0, 255, 0, brightness);
@@ -387,6 +389,15 @@ void reconnect() {
 }
 
 void setColor(int inR, int inG, int inB, int inW, int inCW) {
+/* digitalWrite(CONFIG_PIN_RED, HIGH);
+  digitalWrite(CONFIG_PIN_GREEN, HIGH);
+  digitalWrite(CONFIG_PIN_BLUE, HIGH);
+  digitalWrite(CONFIG_PIN_WARM_WHITE, HIGH);
+  digitalWrite(CONFIG_PIN_COLD_WHITE, HIGH);
+
+return;
+*/
+
   if (CONFIG_INVERT_LED_LOGIC) {
     inR = (255 - inR);
     inG = (255 - inG);
@@ -437,6 +448,7 @@ void setColor(int inR, int inG, int inB, int inW, int inCW) {
     }
 
     Serial.println("}");
+    Serial.flush();
   }
 }
 

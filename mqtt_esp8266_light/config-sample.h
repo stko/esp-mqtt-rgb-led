@@ -20,11 +20,11 @@ enum strip {
 // In case of RGB(W): red, green, blue(, white) is used
 // All values need to be present, if they are not needed, set to -1,
 // it will be ignored.
-#define CONFIG_PIN_RED   2  // For RGB(W)
-#define CONFIG_PIN_GREEN 1  // For RGB(W)
-#define CONFIG_PIN_BLUE  5  // For RGB(W)
-#define CONFIG_PIN_WARM_WHITE 4 // For BRIGHTNESS and Warm White
-#define CONFIG_PIN_COLD_WHITE 3 // For BRIGHTNESS and Cold White
+#define CONFIG_PIN_RED   4  // For RGB(W)
+#define CONFIG_PIN_GREEN 5  // For RGB(W)
+#define CONFIG_PIN_BLUE  14  // For RGB(W)
+#define CONFIG_PIN_WARM_WHITE 2 // For BRIGHTNESS and Warm White
+#define CONFIG_PIN_COLD_WHITE 0 // For BRIGHTNESS and Cold White
 
 // WiFi
 #define CONFIG_WIFI_SSID "xxxxxxxxxxx"
