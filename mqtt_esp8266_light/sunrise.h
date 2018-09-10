@@ -8,4 +8,5 @@ typedef struct
     byte RGB[3];
 } sunriseItem;
 
-extern const sunriseItem sunrize[];
+extern const sunriseItem sunrise[];
+extern size_t mySunriseSize;

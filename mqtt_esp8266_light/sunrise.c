@@ -1,7 +1,7 @@
 
 #include "sunrise.h"
 
-const sunriseItem sunrize[]=
+const sunriseItem sunrise[]=
 {
     {0,0,0},
 {0,0,0},
@@ -2096,4 +2096,4 @@ const sunriseItem sunrize[]=
 {240,244,255},
 {240,244,255}
 };
-size_t mySunriseSize = sizeof(sunriseItem);
+size_t mySunriseSize = sizeof(sunrise)/sizeof(sunriseItem);

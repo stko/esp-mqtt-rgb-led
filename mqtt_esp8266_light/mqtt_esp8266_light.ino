@@ -10,6 +10,14 @@
  * See https://github.com/corbanmailloux/esp-mqtt-rgb-led for more information.
  */
 
+/*
+ * Complete Hardware can be found here:
+ * 
+ * https://nathan.chantrell.net/20170525/h801-wi-fi-rgbw-led-controller-with-mqtt-esp8266/
+ * https://www.aliexpress.com/item/RGBWW-Strip-WiFi-Controller-1-Port-Control-200-Lights-Communicate-with-Android-Phone-Via-WLAN-to/32502007408.html
+ *  
+ */ 
+
 // Set configuration options for LED type, pins, WiFi, and MQTT in the following file:
 #include "config.h"
 
@@ -68,6 +76,12 @@ byte flashBrightness = brightness;
 
 // Globals for colorfade
 bool colorfade = false;
+
+// Globals for Movies
+bool showMovie = false;
+const sunriseItem * movie;
+long movieSize = 0;
+
 int currentColor = 0;
 // {red, grn, blu, wht}
 const byte colors[][4] = {
@@ -167,6 +181,11 @@ void setup_wifi() {
       "state": "ON",
       "effect": "colorfade_fast"
     }
+
+{"brightness": 120, "color": {"r": 255,"g": 255,"b":255}, "state": "ON","cold_white_value":255}
+
+
+    
   */
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
@@ -279,16 +298,30 @@ bool processJson(char* message) {
     flash = true;
     startFlash = true;
   }
-  else if (rgb && root.containsKey("effect") &&
-      (strcmp(root["effect"], "colorfade_slow") == 0 || strcmp(root["effect"], "colorfade_fast") == 0)) {
-    flash = false;
-    colorfade = true;
-    currentColor = 0;
-    if (strcmp(root["effect"], "colorfade_slow") == 0) {
-      transitionTime = CONFIG_COLORFADE_TIME_SLOW;
+  else if (rgb && root.containsKey("effect")) {
+      if  (strcmp(root["effect"], "colorfade_slow") == 0 || strcmp(root["effect"], "colorfade_fast") == 0) {
+      flash = false;
+      colorfade = true;
+      currentColor = 0;
+      if (strcmp(root["effect"], "colorfade_slow") == 0) {
+        transitionTime = CONFIG_COLORFADE_TIME_SLOW;
+      }
+      else {
+        transitionTime = CONFIG_COLORFADE_TIME_FAST;
+      }
     }
-    else {
-      transitionTime = CONFIG_COLORFADE_TIME_FAST;
+      if  (strcmp(root["effect"], "sunrise") == 0 ) {
+      flash = false;
+      colorfade = true;
+      currentColor = 0;
+      movieSize=mySunriseSize;
+      movie=sunrise;
+      if (root.containsKey("transition")) {
+        transitionTime = root["transition"];
+      }
+      else {
+        transitionTime = CONFIG_COLORFADE_TIME_SLOW;
+      }
     }
   }
   else if (colorfade && !root.containsKey("color") && root.containsKey("brightness")) {
