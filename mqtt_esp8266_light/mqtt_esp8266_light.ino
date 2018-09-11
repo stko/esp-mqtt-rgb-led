@@ -221,7 +221,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
     realColdWhite = 0;
   }
 
-  startFade = true;
+  if (!movie){ // if the command requests a movie, we must not set startFade to True
+    startFade = true;
+  }
   inFade = false; // Kill the current fade
 
   sendState();
@@ -310,9 +312,9 @@ bool processJson(char* message) {
         transitionTime = CONFIG_COLORFADE_TIME_FAST;
       }
     }
-      if  (strcmp(root["effect"], "sunrise") == 0 ) {
+    if  (strcmp(root["effect"], "sunrise") == 0 ) {
       flash = false;
-      colorfade = true;
+      colorfade = false;
       currentColor = 0;
       movieSize=mySunriseSize;
       movie=sunrise;
@@ -492,6 +494,12 @@ void loop() {
   }
 
   client.loop();
+  if (colorfade){
+        Serial.println("colorfade is on! ?");
+  }
+  if (inFade){
+        Serial.println("inFade is on! ?");
+  }
 
   if (flash) {
     if (startFlash) {
@@ -578,21 +586,28 @@ void loop() {
     unsigned long now = millis();
     if (startMovieTime==0){
       startMovieTime = now;
+        Serial.print("startMovieTime: ");
+        Serial.println(startMovieTime);
+
     }
     if (startMovieTime + transitionTime < now ){ // end of sequence reached, reset all movie variables
       movie=0;
       transitionTime=0;
       startMovieTime=0;
+        Serial.print("end now: ");
+        Serial.println(now);
     }else{ // do a frame
       unsigned long actualFrame=map(now-startMovieTime,0,transitionTime,0,movieSize);
+      if (actualFrame>=movieSize){ //exceed end of table?
+        actualFrame=movieSize-1; // use last entry
+      }
       realRed = movie[actualFrame].RGB[0];
       realGreen = movie[actualFrame].RGB[1];
       realBlue = movie[actualFrame].RGB[2];
-      realWhite = 100;
-      realColdWhite = 100;
+      realWhite = realRed / 3 + realGreen / 3 + realBlue / 3  ;
+      realColdWhite = realWhite;
       setColor(realRed, realGreen, realBlue, realWhite, realColdWhite);
       delay(30); // sleep 30ms makes around 30 frames/sec.
-
     }
   }
 }
