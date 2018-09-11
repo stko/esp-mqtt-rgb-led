@@ -56,7 +56,7 @@ bool stateOn = false;
 // Globals for fade/transitions
 bool startFade = false;
 unsigned long lastLoop = 0;
-int transitionTime = 0;
+unsigned long transitionTime = 0;
 bool inFade = false;
 int loopCount = 0;
 int stepR, stepG, stepB, stepW, stepCW;
@@ -78,9 +78,9 @@ byte flashBrightness = brightness;
 bool colorfade = false;
 
 // Globals for Movies
-bool showMovie = false;
-const sunriseItem * movie;
-long movieSize = 0;
+const sunriseItem * movie=0;
+size_t movieSize = 0;
+unsigned long startMovieTime = 0;
 
 int currentColor = 0;
 // {red, grn, blu, wht}
@@ -318,9 +318,10 @@ bool processJson(char* message) {
       movie=sunrise;
       if (root.containsKey("transition")) {
         transitionTime = root["transition"];
+        transitionTime = transitionTime * 1000; // in millisecs
       }
       else {
-        transitionTime = CONFIG_COLORFADE_TIME_SLOW;
+        transitionTime = CONFIG_COLORFADE_TIME_SLOW * 1000; //millisecs
       }
     }
   }
@@ -571,6 +572,27 @@ void loop() {
       else {
         inFade = false;
       }
+    }
+  }
+  if (movie){
+    unsigned long now = millis();
+    if (startMovieTime==0){
+      startMovieTime = now;
+    }
+    if (startMovieTime + transitionTime < now ){ // end of sequence reached, reset all movie variables
+      movie=0;
+      transitionTime=0;
+      startMovieTime=0;
+    }else{ // do a frame
+      unsigned long actualFrame=map(now-startMovieTime,0,transitionTime,0,movieSize);
+      realRed = movie[actualFrame].RGB[0];
+      realGreen = movie[actualFrame].RGB[1];
+      realBlue = movie[actualFrame].RGB[2];
+      realWhite = 100;
+      realColdWhite = 100;
+      setColor(realRed, realGreen, realBlue, realWhite, realColdWhite);
+      delay(30); // sleep 30ms makes around 30 frames/sec.
+
     }
   }
 }
