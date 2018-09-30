@@ -20,15 +20,27 @@ enum strip {
 // In case of RGB(W): red, green, blue(, white) is used
 // All values need to be present, if they are not needed, set to -1,
 // it will be ignored.
-#define CONFIG_PIN_RED   4  // For RGB(W)
-#define CONFIG_PIN_GREEN 5  // For RGB(W)
-#define CONFIG_PIN_BLUE  14  // For RGB(W)
-#define CONFIG_PIN_WARM_WHITE 2 // For BRIGHTNESS and Warm White
-#define CONFIG_PIN_COLD_WHITE 0 // For BRIGHTNESS and Cold White
+
+// is it a H801 Module?
+#define MODULE_H801
+
+#ifdef MODULE_H801
+  #define CONFIG_PIN_RED   15  // For RGB(W)
+  #define CONFIG_PIN_GREEN 13  // For RGB(W)
+  #define CONFIG_PIN_BLUE  12  // For RGB(W)
+  #define CONFIG_PIN_WARM_WHITE 14 // For BRIGHTNESS and Warm White
+  #define CONFIG_PIN_COLD_WHITE 4 // For BRIGHTNESS and Cold White
+#else
+  #define CONFIG_PIN_RED   4  // For RGB(W)
+  #define CONFIG_PIN_GREEN 5  // For RGB(W)
+  #define CONFIG_PIN_BLUE  14  // For RGB(W)
+  #define CONFIG_PIN_WARM_WHITE 2 // For BRIGHTNESS and Warm White
+  #define CONFIG_PIN_COLD_WHITE 0 // For BRIGHTNESS and Cold White
+#endif
 
 // WiFi
-#define CONFIG_WIFI_SSID "xxxxxxxxxxx"
-#define CONFIG_WIFI_PASS "xxxxxxx"
+#define CONFIG_WIFI_SSID "SKWLANAP2"
+#define CONFIG_WIFI_PASS "stkoWLAN01ABC"
 
 // MQTT
 #define CONFIG_MQTT_HOST "openhabianpi"
