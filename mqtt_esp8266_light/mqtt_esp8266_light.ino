@@ -81,6 +81,9 @@ bool colorfade = false;
 const sunriseItem * movie=0;
 size_t movieSize = 0;
 unsigned long startMovieTime = 0;
+unsigned long lastFrame = 0;
+unsigned long frameStartTime=0;
+
 
 int currentColor = 0;
 // {red, grn, blu, wht}
@@ -99,6 +102,21 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 void setup() {
+
+#ifdef MODULE_H801
+
+  //********** CHANGE PIN FUNCTION  TO TX/RX **********
+  // taken from https://www.esp8266.com/wiki/doku.php?id=esp8266_gpio_pin_allocations#pin_functions
+  //GPIO 2 (TX) swap the pin to a TX.
+  pinMode(2, FUNCTION_4); 
+  //GPIO 3 (RX) swap the pin to a RX.
+  // pinMode(3, FUNCTION_0); 
+  //***************************************************
+
+#endif
+
+
+  
   if (rgb) {
     pinMode(CONFIG_PIN_RED, OUTPUT);
     pinMode(CONFIG_PIN_GREEN, OUTPUT);
@@ -586,27 +604,41 @@ void loop() {
     unsigned long now = millis();
     if (startMovieTime==0){
       startMovieTime = now;
-        Serial.print("startMovieTime: ");
-        Serial.println(startMovieTime);
-
+      Serial.print("startMovieTime: ");
+      Serial.println(startMovieTime);
     }
-    if (startMovieTime + transitionTime < now ){ // end of sequence reached, reset all movie variables
+    // do a frame
+    unsigned long actualFrame=map(now-startMovieTime,0,transitionTime,0,movieSize);
+    if (actualFrame>=movieSize-2){ //exceed end of table?
       movie=0;
       transitionTime=0;
       startMovieTime=0;
-        Serial.print("end now: ");
-        Serial.println(now);
-    }else{ // do a frame
-      unsigned long actualFrame=map(now-startMovieTime,0,transitionTime,0,movieSize);
-      if (actualFrame>=movieSize){ //exceed end of table?
-        actualFrame=movieSize-1; // use last entry
+      Serial.print("end now: ");
+      Serial.println(now);
+    }else{
+      if (lastFrame!=actualFrame){
+        frameStartTime=now;
       }
-      realRed = movie[actualFrame].RGB[0];
+      lastFrame=actualFrame;
+      Serial.print("actualFrame: ");
+      Serial.println(actualFrame);
+      realRed = map(now,frameStartTime,frameStartTime+(transitionTime/(movieSize-1)), movie[actualFrame].RGB[2],movie[actualFrame+1].RGB[2]);
+      realGreen = map(now,frameStartTime,frameStartTime+(transitionTime/(movieSize-1)), movie[actualFrame].RGB[1],movie[actualFrame+1].RGB[1]);
+      realBlue = map(now,frameStartTime,frameStartTime+(transitionTime/(movieSize-1)), movie[actualFrame].RGB[0],movie[actualFrame+1].RGB[0]);
+      /*
+      realRed = movie[actualFrame].RGB[2];
       realGreen = movie[actualFrame].RGB[1];
-      realBlue = movie[actualFrame].RGB[2];
-      realWhite = realRed / 3 + realGreen / 3 + realBlue / 3  ;
+      realBlue = movie[actualFrame].RGB[0];
+      */
+      realWhite = realRed ;
+      realWhite = realWhite > realGreen ? realGreen : realWhite  ;
+      realWhite = realWhite > realBlue ? realBlue : realWhite  ;
+      unsigned long longWhite= realWhite;
+      //realWhite = (longWhite * longWhite* longWhite)/65536;
+      realWhite = (longWhite * longWhite)/256;
       realColdWhite = realWhite;
       setColor(realRed, realGreen, realBlue, realWhite, realColdWhite);
+
       delay(30); // sleep 30ms makes around 30 frames/sec.
     }
   }
