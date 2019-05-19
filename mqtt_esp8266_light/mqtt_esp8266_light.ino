@@ -608,13 +608,21 @@ void loop() {
       Serial.println(startMovieTime);
     }
     // do a frame
+      Serial.print("transitionTime: ");
+      Serial.println(transitionTime);
     unsigned long actualFrame=map(now-startMovieTime,0,transitionTime,0,movieSize);
     if (actualFrame>=movieSize-2){ //exceed end of table?
+      Serial.print("actualFrame: ");
+      Serial.println(actualFrame);
+      Serial.print("movieSize: ");
+      Serial.println(movieSize);
       movie=0;
       transitionTime=0;
       startMovieTime=0;
       Serial.print("end now: ");
       Serial.println(now);
+      setColor(realRed, realGreen, realBlue, realWhite, realColdWhite);
+
     }else{
       if (lastFrame!=actualFrame){
         frameStartTime=now;
