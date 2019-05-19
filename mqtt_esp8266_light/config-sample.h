@@ -22,6 +22,7 @@ enum strip {
 // it will be ignored.
 
 // is it a H801 Module?
+// in the Arduino IDE, this modules is handled as "Generic ESP8266 Module" 512KB
 #define MODULE_H801
 
 #ifdef MODULE_H801

@@ -604,22 +604,16 @@ void loop() {
     unsigned long now = millis();
     if (startMovieTime==0){
       startMovieTime = now;
-      Serial.print("startMovieTime: ");
+      Serial.print("start movie at time: ");
       Serial.println(startMovieTime);
     }
     // do a frame
-      Serial.print("transitionTime: ");
-      Serial.println(transitionTime);
     unsigned long actualFrame=map(now-startMovieTime,0,transitionTime,0,movieSize);
     if (actualFrame>=movieSize-2){ //exceed end of table?
-      Serial.print("actualFrame: ");
-      Serial.println(actualFrame);
-      Serial.print("movieSize: ");
-      Serial.println(movieSize);
       movie=0;
       transitionTime=0;
       startMovieTime=0;
-      Serial.print("end now: ");
+      Serial.print("movie ends now at time: ");
       Serial.println(now);
       setColor(realRed, realGreen, realBlue, realWhite, realColdWhite);
 
@@ -628,16 +622,13 @@ void loop() {
         frameStartTime=now;
       }
       lastFrame=actualFrame;
-      Serial.print("actualFrame: ");
-      Serial.println(actualFrame);
+      if (CONFIG_DEBUG) {
+        Serial.print("actualFrame: ");
+        Serial.println(actualFrame);
+      }
       realRed = map(now,frameStartTime,frameStartTime+(transitionTime/(movieSize-1)), movie[actualFrame].RGB[2],movie[actualFrame+1].RGB[2]);
       realGreen = map(now,frameStartTime,frameStartTime+(transitionTime/(movieSize-1)), movie[actualFrame].RGB[1],movie[actualFrame+1].RGB[1]);
       realBlue = map(now,frameStartTime,frameStartTime+(transitionTime/(movieSize-1)), movie[actualFrame].RGB[0],movie[actualFrame+1].RGB[0]);
-      /*
-      realRed = movie[actualFrame].RGB[2];
-      realGreen = movie[actualFrame].RGB[1];
-      realBlue = movie[actualFrame].RGB[0];
-      */
       realWhite = realRed ;
       realWhite = realWhite > realGreen ? realGreen : realWhite  ;
       realWhite = realWhite > realBlue ? realBlue : realWhite  ;
