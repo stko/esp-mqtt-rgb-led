@@ -78,11 +78,12 @@ byte flashBrightness = brightness;
 bool colorfade = false;
 
 // Globals for Movies
-const moviePixel * movie=0;
-size_t movieSize = 0;
+moviePixel * movie=0;
+const movieStruct * actualMovie = 0;
 unsigned long startMovieTime = 0;
 unsigned long lastFrame = 0;
 unsigned long frameStartTime=0;
+bool movieLoop;
 
 
 int currentColor = 0;
@@ -332,25 +333,26 @@ bool processJson(char* message) {
     }
 
 
-for(int movieIndex = 0; movieIndex < movieArraySize ; movieIndex++)
-{
-  Serial.print("Found Movie Name...");
-  Serial.println(movieArray[movieIndex].movieName);
-}
-
+    for(int movieIndex = 0; movieIndex < movieArraySize ; movieIndex++){
+      Serial.print("Found Movie Name...");
+      Serial.println(movieArray[movieIndex].movieName);
     
-    if  (strcmp(root["effect"], "sunrise") == 0 ) {
-      flash = false;
-      colorfade = false;
-      currentColor = 0;
-      movieSize=mySunriseSize;
-      movie=sunrise;
-      if (root.containsKey("transition")) {
-        transitionTime = root["transition"];
-        transitionTime = transitionTime * 1000; // in millisecs
-      }
-      else {
-        transitionTime = CONFIG_COLORFADE_TIME_SLOW * 1000; //millisecs
+      //if  (strcmp(root["effect"], "sunrise") == 0 ) {
+       if  (strcmp(root["effect"], movieArray[movieIndex].movieName) == 0 ) {
+        flash = false;
+        colorfade = false;
+        currentColor = 0;
+        actualMovie = &movieArray[movieIndex];
+        movie=movieArray[movieIndex].moviePixels;
+        transitionTime = movieArray[movieIndex].transitionTime ; // in millisecs;
+        if (root.containsKey("transition")) {
+          transitionTime = root["transition"];
+          transitionTime = transitionTime * 1000; // in millisecs
+        }
+        movieLoop = movieArray[movieIndex].loop ;
+        if (root.containsKey("loop")) {
+          movieLoop = strcmp(root["loop"], "true") == 0;
+        }
       }
     }
   }
@@ -617,15 +619,19 @@ void loop() {
       Serial.println(startMovieTime);
     }
     // do a frame
-    unsigned long actualFrame=map(now-startMovieTime,0,transitionTime,0,movieSize);
-    if (actualFrame>=movieSize-2){ //exceed end of table?
-      movie=0;
-      transitionTime=0;
-      startMovieTime=0;
-      Serial.print("movie ends now at time: ");
-      Serial.println(now);
-      setColor(realRed, realGreen, realBlue, realWhite, realColdWhite);
-
+    unsigned long actualFrame=map(now-startMovieTime,0,transitionTime,0,actualMovie->size);
+    if (actualFrame>=actualMovie->size-2){ //exceed end of table?
+      if (movieLoop){ // restart the movie
+        movie=actualMovie->moviePixels;
+        startMovieTime=now;
+      }else{
+        movie=0;
+        transitionTime=0;
+        startMovieTime=0;
+        Serial.print("movie ends now at time: ");
+        Serial.println(now);
+        setColor(realRed, realGreen, realBlue, realWhite, realColdWhite);
+      }
     }else{
       if (lastFrame!=actualFrame){
         frameStartTime=now;
@@ -635,9 +641,9 @@ void loop() {
         Serial.print("actualFrame: ");
         Serial.println(actualFrame);
       }
-      realRed = map(now,frameStartTime,frameStartTime+(transitionTime/(movieSize-1)), movie[actualFrame].RGB[2],movie[actualFrame+1].RGB[2]);
-      realGreen = map(now,frameStartTime,frameStartTime+(transitionTime/(movieSize-1)), movie[actualFrame].RGB[1],movie[actualFrame+1].RGB[1]);
-      realBlue = map(now,frameStartTime,frameStartTime+(transitionTime/(movieSize-1)), movie[actualFrame].RGB[0],movie[actualFrame+1].RGB[0]);
+      realRed = map(now,frameStartTime,frameStartTime+(transitionTime/(actualMovie->size-1)), movie[actualFrame].RGB[2],movie[actualFrame+1].RGB[2]);
+      realGreen = map(now,frameStartTime,frameStartTime+(transitionTime/(actualMovie->size-1)), movie[actualFrame].RGB[1],movie[actualFrame+1].RGB[1]);
+      realBlue = map(now,frameStartTime,frameStartTime+(transitionTime/(actualMovie->size-1)), movie[actualFrame].RGB[0],movie[actualFrame+1].RGB[0]);
       realWhite = realRed ;
       realWhite = realWhite > realGreen ? realGreen : realWhite  ;
       realWhite = realWhite > realBlue ? realBlue : realWhite  ;

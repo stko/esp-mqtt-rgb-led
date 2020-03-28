@@ -18,7 +18,7 @@ typedef struct
   char  * movieName;
   bool loop;
   bool hardChange;
-  moviePixelArray * moviePixels;
+  moviePixel * moviePixels;
   size_t size;
 } movieStruct;
 
