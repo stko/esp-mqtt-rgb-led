@@ -1,7 +1,7 @@
 
 #include "sunrise.h"
 
-const sunriseItem sunrise[]=
+const moviePixel sunrise[]=
 {
 {0,0,0},
 {0,0,2},
@@ -584,4 +584,18 @@ const sunriseItem sunrise[]=
 {255,255,255},
 {255,255,255}
 };
-size_t mySunriseSize = sizeof(sunrise)/sizeof(sunriseItem);
+size_t mySunriseSize = sizeof(sunrise)/sizeof(moviePixel);
+
+
+const movieStruct movieArray[]={
+    {
+      .transitionTime = 60,
+      .movieName = "sunrise",
+      .loop = false ,
+      .hardChange = false ,
+      .moviePixels = &sunrise,
+      .size = sizeof(sunrise)/sizeof(moviePixel)
+    }
+};
+
+size_t movieArraySize = sizeof(movieArray) / sizeof(movieStruct);

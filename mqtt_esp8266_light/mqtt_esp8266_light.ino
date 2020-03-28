@@ -78,7 +78,7 @@ byte flashBrightness = brightness;
 bool colorfade = false;
 
 // Globals for Movies
-const sunriseItem * movie=0;
+const moviePixel * movie=0;
 size_t movieSize = 0;
 unsigned long startMovieTime = 0;
 unsigned long lastFrame = 0;
@@ -330,6 +330,15 @@ bool processJson(char* message) {
         transitionTime = CONFIG_COLORFADE_TIME_FAST;
       }
     }
+
+
+for(int movieIndex = 0; movieIndex < movieArraySize ; movieIndex++)
+{
+  Serial.print("Found Movie Name...");
+  Serial.println(movieArray[movieIndex].movieName);
+}
+
+    
     if  (strcmp(root["effect"], "sunrise") == 0 ) {
       flash = false;
       colorfade = false;
