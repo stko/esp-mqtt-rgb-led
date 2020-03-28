@@ -1185,7 +1185,7 @@ const movieStruct movieArray[]={
       .transitionTime = 60000,
       .movieName = "sunrise",
       .loop = true ,
-      .hardChange = false ,
+      .hardChange = true ,
       .moviePixels = &sunrise,
       .size = sizeof(sunrise)/sizeof(moviePixel)
     }
