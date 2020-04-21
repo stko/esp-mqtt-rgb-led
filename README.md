@@ -1,3 +1,12 @@
+## About this Fork
+
+This is a clone from the original [corbanmailloux/esp-mqtt-rgb-led](https://github.com/corbanmailloux/esp-mqtt-rgb-led), but with one functional enhancement: 
+
+On command the device can play a hardcoded color sequence (the so called movie), where in the actual state only one movie is implemented, it's creates a sunrise in the morning, where the colors are taken out from a youtube sunrise movie :-)
+
+Other possible movies could be e.g. the light from a fire, the wave colors under the sea or some police blue lights
+
+
 # ESP8266 MQTT RGB(W) Lights Using JSON for Home Assistant
 
 This project adds an easy way to create DIY lighting for [Home Assistant](https://home-assistant.io/), an amazing, extensible, open-source home automation system.
